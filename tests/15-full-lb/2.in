@@ -1,0 +1,5 @@
+NOW 0
+POOL a b
+REQUEST c1 a
+REQUEST c1 a
+METRICS

@@ -1,0 +1,3 @@
+LOOKUP nothing.com
+CERT a.com aa
+LOOKUP b.com

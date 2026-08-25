@@ -1,0 +1,5 @@
+ROUTE host.com /api/ api_v1
+ROUTE host.com /api/v2/ api_v2
+DEFAULT def
+L7 host.com /api/v2/items
+L7 host.com /api/users

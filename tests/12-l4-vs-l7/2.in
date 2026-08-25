@@ -1,0 +1,6 @@
+ROUTE api.example.com /v1/ svc1
+ROUTE api.example.com /v2/ svc2
+DEFAULT default_svc
+L7 api.example.com /v1/users
+L7 api.example.com /v2/items
+L7 api.example.com /v3/other

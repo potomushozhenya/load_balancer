@@ -1,0 +1,17 @@
+OK
+OK
+OK
+OK
+OK
+OK
+lb_requests_total{backend="a",status="200"} 1
+lb_requests_total{backend="a",status="500"} 1
+lb_requests_total{backend="b",status="200"} 1
+lb_bytes_in_total{backend="a"} 1024
+lb_bytes_in_total{backend="b"} 0
+lb_bytes_out_total{backend="a"} 2048
+lb_bytes_out_total{backend="b"} 0
+lb_latency_avg_ms{backend="a"} 75
+lb_latency_avg_ms{backend="b"} 75
+lb_health{backend="a"} 1
+lb_health{backend="b"} 1

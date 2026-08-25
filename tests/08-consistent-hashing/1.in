@@ -1,0 +1,4 @@
+POOL s1 s2 s3
+LOOKUP user1
+LOOKUP user2
+LOOKUP user3

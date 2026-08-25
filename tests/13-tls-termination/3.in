@@ -1,0 +1,4 @@
+CERT b.com bb
+CERT a.com aa
+CERT *.x.com xx
+LIST

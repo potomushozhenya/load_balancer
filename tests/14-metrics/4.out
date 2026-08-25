@@ -1,0 +1,9 @@
+OK
+OK
+OK
+OK
+lb_requests_total{backend="x",status="404"} 1
+lb_bytes_in_total{backend="x"} 100
+lb_bytes_out_total{backend="x"} 200
+lb_latency_avg_ms{backend="x"} 5
+lb_health{backend="x"} 1

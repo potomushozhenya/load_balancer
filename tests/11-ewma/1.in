@@ -1,0 +1,4 @@
+POOL a b c
+PICK
+RECORD a 100
+PICK

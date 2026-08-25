@@ -1,0 +1,4 @@
+POOL a b
+DOWN a
+REQUEST u1 a
+REQUEST u2 b

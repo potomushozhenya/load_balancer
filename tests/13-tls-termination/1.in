@@ -1,0 +1,5 @@
+CERT example.com cert1
+CERT *.example.com wild
+LOOKUP example.com
+LOOKUP api.example.com
+LOOKUP foo.bar

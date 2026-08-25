@@ -1,0 +1,9 @@
+OK
+OK
+OK
+OK
+lb_requests_total{backend="s1",status="200"} 3
+lb_bytes_in_total{backend="s1"} 0
+lb_bytes_out_total{backend="s1"} 0
+lb_latency_avg_ms{backend="s1"} 20
+lb_health{backend="s1"} 1

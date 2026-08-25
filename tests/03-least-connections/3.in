@@ -1,0 +1,8 @@
+POOL a b
+PICK
+DONE a
+PICK
+DONE b
+PICK
+DONE a
+STATUS

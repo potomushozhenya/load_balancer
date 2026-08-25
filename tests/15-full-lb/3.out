@@ -1,0 +1,15 @@
+OK
+OK
+a
+b
+a
+b
+a
+b
+a
+b
+a
+b
+LIMITED
+lb_requests_total{backend="a"} 5
+lb_requests_total{backend="b"} 5

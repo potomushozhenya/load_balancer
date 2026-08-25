@@ -1,0 +1,7 @@
+ROUTE * /admin/ admin_svc
+ROUTE foo.com / web_svc
+DEFAULT def
+L7 foo.com /admin/x
+L7 bar.com /admin/x
+L7 foo.com /
+L7 zzz.com /

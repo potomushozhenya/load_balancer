@@ -1,0 +1,7 @@
+OK
+OK
+OK
+b
+b
+lb_requests_total{backend="a"} 0
+lb_requests_total{backend="b"} 2

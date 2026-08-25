@@ -1,0 +1,6 @@
+POOL x y z w
+PICK x y
+PICK z w
+PICK x z
+PICK y w
+STATUS

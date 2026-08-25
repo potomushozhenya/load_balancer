@@ -1,0 +1,10 @@
+OK
+OK
+lb_bytes_in_total{backend="a"} 0
+lb_bytes_in_total{backend="b"} 0
+lb_bytes_out_total{backend="a"} 0
+lb_bytes_out_total{backend="b"} 0
+lb_latency_avg_ms{backend="a"} 0
+lb_latency_avg_ms{backend="b"} 0
+lb_health{backend="a"} 0
+lb_health{backend="b"} 1

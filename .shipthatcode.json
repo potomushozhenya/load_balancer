@@ -1,0 +1,78 @@
+{
+  "course": "build-load-balancer",
+  "language": "go",
+  "language_id": 60,
+  "entrypoint": "main.go",
+  "version": 1,
+  "content_hash": "c8ae1c7c7b9df608",
+  "lessons": [
+    {
+      "slug": "round-robin",
+      "tests_hash": "0542005e52c5"
+    },
+    {
+      "slug": "weighted-rr",
+      "tests_hash": "876e92506f6f"
+    },
+    {
+      "slug": "least-connections",
+      "tests_hash": "6e90b6b1353f"
+    },
+    {
+      "slug": "power-of-two",
+      "tests_hash": "a01529f52cd0"
+    },
+    {
+      "slug": "health-checks",
+      "tests_hash": "5cef15c61121"
+    },
+    {
+      "slug": "passive-health",
+      "tests_hash": "3f34ed21ae74"
+    },
+    {
+      "slug": "circuit-breaker",
+      "tests_hash": "18df375acc51"
+    },
+    {
+      "slug": "consistent-hashing",
+      "tests_hash": "19d251e09b99"
+    },
+    {
+      "slug": "sticky-sessions",
+      "tests_hash": "d5eb670891c9"
+    },
+    {
+      "slug": "rate-limiting",
+      "tests_hash": "69385dfbaf5f"
+    },
+    {
+      "slug": "ewma",
+      "tests_hash": "04acd2de1823"
+    },
+    {
+      "slug": "l4-vs-l7",
+      "tests_hash": "e21a52f8c143"
+    },
+    {
+      "slug": "tls-termination",
+      "tests_hash": "d963b6551440"
+    },
+    {
+      "slug": "metrics",
+      "tests_hash": "5499595b46b0"
+    },
+    {
+      "slug": "full-lb",
+      "tests_hash": "6ede78074e52"
+    },
+    {
+      "slug": "slow-start",
+      "tests_hash": "96be79e4f34d"
+    },
+    {
+      "slug": "graceful-drain",
+      "tests_hash": "46bb3300a53f"
+    }
+  ]
+}

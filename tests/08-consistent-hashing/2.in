@@ -1,0 +1,6 @@
+POOL a b
+LOOKUP key1
+LOOKUP key2
+ADD c
+LOOKUP key1
+LOOKUP key2
