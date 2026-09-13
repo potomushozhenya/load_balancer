@@ -22,7 +22,7 @@ type LoadBalancer struct {
 // TODO (round-robin): implement per the lesson description.
 func RR_pick(load_balancer *LoadBalancer) string {
 	if load_balancer.pool_len == 0 {
-		return ""
+		return "EMPTY"
 	}
 	load_balancer.mutex.Lock()
 	index := load_balancer.counter % load_balancer.pool_len
@@ -38,7 +38,7 @@ func RR_pool(load_balancer *LoadBalancer, pool_strings []string) {
 	}
 	load_balancer.mutex.Lock()
 	load_balancer.pool = make([]Backend, pool_len)
-	for i := range pool_len {
+	for i := 0; i < pool_len; i++ {
 		load_balancer.pool[i].name = pool_strings[i]
 	}
 	load_balancer.pool_len = pool_len
