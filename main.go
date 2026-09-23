@@ -3,22 +3,22 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 )
 
 type Backend struct {
 	name        string
-	init_weight int
-	weight      int
+	connections int
 }
 
 type LoadBalancer struct {
-	pool     []Backend
-	pool_len int
-	mutex    sync.Mutex
+	pool        map[string]*Backend
+	sorted_keys []string
+	pool_len    int
+	mutex       sync.Mutex
 }
 
 // TODO (round-robin): implement per the lesson description.
@@ -26,49 +26,74 @@ func RR_pick(load_balancer *LoadBalancer) string {
 	if load_balancer.pool_len == 0 {
 		return "EMPTY"
 	}
-	max, max_index, sum := 0, 0, 0
+	min, min_key := math.MaxInt, ""
 	load_balancer.mutex.Lock()
 	for i := 0; i < load_balancer.pool_len; i++ {
-		new_value := load_balancer.pool[i].weight + load_balancer.pool[i].init_weight
-		sum += new_value
-		load_balancer.pool[i].weight = new_value
-		if new_value > max {
-			max = new_value
-			max_index = i
+		key := load_balancer.sorted_keys[i]
+		curr_connections := load_balancer.pool[key].connections
+		if curr_connections < min {
+			min = curr_connections
+			min_key = key
 		}
 	}
-	load_balancer.pool[max_index].weight -= sum
+	load_balancer.pool[min_key].connections += 1
 	load_balancer.mutex.Unlock()
-	return load_balancer.pool[max_index].name
+	return load_balancer.pool[min_key].name
+}
+
+func RR_done(load_balancer *LoadBalancer, done_strings []string) {
+	done_len := len(done_strings)
+	if done_len != 1 {
+		fmt.Println("wrong format")
+	}
+	load_balancer.mutex.Lock()
+	backend, ok := load_balancer.pool[done_strings[0]]
+	cur_value := -1
+	if ok {
+		cur_value = backend.connections
+	} else {
+		fmt.Println("wrong backend name")
+		load_balancer.mutex.Unlock()
+		return
+	}
+	if cur_value > 0 {
+		backend.connections = cur_value - 1
+	}
+	fmt.Println("OK")
+	load_balancer.mutex.Unlock()
 }
 
 func RR_pool(load_balancer *LoadBalancer, pool_strings []string) {
 	pool_len := len(pool_strings)
 	if pool_len < 1 {
-		fmt.Println("pool can't be empty")
+		fmt.Println("pool can not be empty")
 	}
 	load_balancer.mutex.Lock()
-	load_balancer.pool = make([]Backend, pool_len)
+	load_balancer.pool = make(map[string]*Backend)
+	load_balancer.sorted_keys = make([]string, pool_len)
 	for i := 0; i < pool_len; i++ {
-		pool_strings_splitted := strings.Split(pool_strings[i], ":")
-		parsed_weight, err := strconv.Atoi(pool_strings_splitted[1])
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-		load_balancer.pool[i].name = pool_strings_splitted[0]
-		load_balancer.pool[i].init_weight = parsed_weight
+		name := pool_strings[i]
+		load_balancer.sorted_keys[i] = name
+		load_balancer.pool[name] = &Backend{name: name, connections: 0}
 	}
 	load_balancer.pool_len = pool_len
-
 	fmt.Println("OK")
+	load_balancer.mutex.Unlock()
+}
+
+func RR_status(load_balancer *LoadBalancer) {
+	load_balancer.mutex.Lock()
+	for i := 0; i < load_balancer.pool_len; i++ {
+		key := load_balancer.sorted_keys[i]
+		fmt.Printf("%s:%d\n", key, load_balancer.pool[key].connections)
+	}
 	load_balancer.mutex.Unlock()
 }
 
 func main() {
 	sc := bufio.NewScanner(os.Stdin)
 	sc.Buffer(make([]byte, 1024*1024), 1024*1024)
-	lb := LoadBalancer{[]Backend{}, 0, sync.Mutex{}}
+	lb := LoadBalancer{nil, nil, 0, sync.Mutex{}}
 	for sc.Scan() {
 		words := strings.Fields(sc.Text())
 		if len(words) == 0 {
@@ -83,23 +108,18 @@ func main() {
 				fmt.Println(pick)
 
 			}
-		case "PICKN":
+		case "DONE":
 			{
-				n, err := strconv.Atoi(args[0])
-				if err != nil {
-					fmt.Println(err)
-					continue
-				}
-				picks := make([]string, n, n)
-				for i := 0; i < n; i++ {
-					picks[i] = RR_pick(&lb)
-				}
-				fmt.Println(strings.Join(picks, ","))
+				RR_done(&lb, args)
 
 			}
 		case "POOL":
 			{
 				RR_pool(&lb, args)
+			}
+		case "STATUS":
+			{
+				RR_status(&lb)
 			}
 		}
 	}
