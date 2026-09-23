@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"math"
 	"os"
 	"strings"
 	"sync"
@@ -26,10 +25,11 @@ func RR_pick(load_balancer *LoadBalancer) string {
 	if load_balancer.pool_len == 0 {
 		return "EMPTY"
 	}
-	min, min_key := math.MaxInt, ""
 	load_balancer.mutex.Lock()
+	sorted_keys := load_balancer.sorted_keys
+	min, min_key := load_balancer.pool[sorted_keys[0]].connections, sorted_keys[0]
 	for i := 0; i < load_balancer.pool_len; i++ {
-		key := load_balancer.sorted_keys[i]
+		key := sorted_keys[i]
 		curr_connections := load_balancer.pool[key].connections
 		if curr_connections < min {
 			min = curr_connections
