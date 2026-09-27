@@ -4,9 +4,8 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"maps"
 	"os"
-	"slices"
+	"sort"
 	"strings"
 	"sync"
 )
@@ -29,10 +28,15 @@ func (lb *LoadBalancer) SetPool(names []string) {
 	lb.mu.Lock()
 	defer lb.mu.Unlock()
 	lb.conns = make(map[string]int, len(names))
+	lb.names = lb.names[:0]
 	for _, n := range names {
+		if _, dup := lb.conns[n]; dup {
+			continue
+		}
 		lb.conns[n] = 0
+		lb.names = append(lb.names, n)
 	}
-	lb.names = slices.Sorted(maps.Keys(lb.conns))
+	sort.Strings(lb.names)
 }
 
 func (lb *LoadBalancer) Pick(a, b string) (string, error) {
