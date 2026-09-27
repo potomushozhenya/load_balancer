@@ -2,125 +2,132 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"maps"
 	"os"
+	"slices"
 	"strings"
 	"sync"
 )
 
-type Backend struct {
-	name        string
-	connections int
-}
+var (
+	errEmptyPool      = errors.New("pool is empty")
+	errUnknownBackend = errors.New("unknown backend")
+)
 
+// LoadBalancer picks backends using power-of-two-choices: of the two
+// candidates, the one with fewer active connections wins (ties go to the
+// lexicographically smaller name).
 type LoadBalancer struct {
-	pool        map[string]*Backend
-	sorted_keys []string
-	pool_len    int
-	mutex       sync.Mutex
+	mu    sync.Mutex
+	conns map[string]int
+	names []string // sorted, for deterministic STATUS output
 }
 
-// TODO (round-robin): implement per the lesson description.
-func RR_pick(load_balancer *LoadBalancer) string {
-	if load_balancer.pool_len == 0 {
-		return "EMPTY"
+func (lb *LoadBalancer) SetPool(names []string) {
+	lb.mu.Lock()
+	defer lb.mu.Unlock()
+	lb.conns = make(map[string]int, len(names))
+	for _, n := range names {
+		lb.conns[n] = 0
 	}
-	load_balancer.mutex.Lock()
-	sorted_keys := load_balancer.sorted_keys
-	min, min_key := load_balancer.pool[sorted_keys[0]].connections, sorted_keys[0]
-	for i := 0; i < load_balancer.pool_len; i++ {
-		key := sorted_keys[i]
-		curr_connections := load_balancer.pool[key].connections
-		if curr_connections < min {
-			min = curr_connections
-			min_key = key
-		}
-	}
-	load_balancer.pool[min_key].connections += 1
-	load_balancer.mutex.Unlock()
-	return load_balancer.pool[min_key].name
+	lb.names = slices.Sorted(maps.Keys(lb.conns))
 }
 
-func RR_done(load_balancer *LoadBalancer, done_strings []string) {
-	done_len := len(done_strings)
-	if done_len != 1 {
-		fmt.Println("wrong format")
+func (lb *LoadBalancer) Pick(a, b string) (string, error) {
+	lb.mu.Lock()
+	defer lb.mu.Unlock()
+	if len(lb.conns) == 0 {
+		return "", errEmptyPool
 	}
-	load_balancer.mutex.Lock()
-	backend, ok := load_balancer.pool[done_strings[0]]
-	cur_value := -1
-	if ok {
-		cur_value = backend.connections
-	} else {
-		fmt.Println("wrong backend name")
-		load_balancer.mutex.Unlock()
-		return
+	ca, okA := lb.conns[a]
+	cb, okB := lb.conns[b]
+	if !okA || !okB {
+		return "", errUnknownBackend
 	}
-	if cur_value > 0 {
-		backend.connections = cur_value - 1
+	pick := a
+	if cb < ca || (cb == ca && b < a) {
+		pick = b
 	}
-	fmt.Println("OK")
-	load_balancer.mutex.Unlock()
+	lb.conns[pick]++
+	return pick, nil
 }
 
-func RR_pool(load_balancer *LoadBalancer, pool_strings []string) {
-	pool_len := len(pool_strings)
-	if pool_len < 1 {
-		fmt.Println("pool can not be empty")
+func (lb *LoadBalancer) Done(name string) error {
+	lb.mu.Lock()
+	defer lb.mu.Unlock()
+	c, ok := lb.conns[name]
+	if !ok {
+		return errUnknownBackend
 	}
-	load_balancer.mutex.Lock()
-	load_balancer.pool = make(map[string]*Backend)
-	load_balancer.sorted_keys = make([]string, pool_len)
-	for i := 0; i < pool_len; i++ {
-		name := pool_strings[i]
-		load_balancer.sorted_keys[i] = name
-		load_balancer.pool[name] = &Backend{name: name, connections: 0}
+	if c > 0 {
+		lb.conns[name] = c - 1
 	}
-	load_balancer.pool_len = pool_len
-	fmt.Println("OK")
-	load_balancer.mutex.Unlock()
+	return nil
 }
 
-func RR_status(load_balancer *LoadBalancer) {
-	load_balancer.mutex.Lock()
-	for i := 0; i < load_balancer.pool_len; i++ {
-		key := load_balancer.sorted_keys[i]
-		fmt.Printf("%s:%d\n", key, load_balancer.pool[key].connections)
+func (lb *LoadBalancer) Status() []string {
+	lb.mu.Lock()
+	defer lb.mu.Unlock()
+	lines := make([]string, 0, len(lb.names))
+	for _, n := range lb.names {
+		lines = append(lines, fmt.Sprintf("%s:%d", n, lb.conns[n]))
 	}
-	load_balancer.mutex.Unlock()
+	return lines
 }
 
 func main() {
 	sc := bufio.NewScanner(os.Stdin)
 	sc.Buffer(make([]byte, 1024*1024), 1024*1024)
-	lb := LoadBalancer{nil, nil, 0, sync.Mutex{}}
+	out := bufio.NewWriter(os.Stdout)
+	defer out.Flush()
+
+	var lb LoadBalancer
 	for sc.Scan() {
 		words := strings.Fields(sc.Text())
 		if len(words) == 0 {
-			fmt.Println("Incorrect line")
 			continue
 		}
 		cmd, args := words[0], words[1:]
 		switch cmd {
+		case "POOL":
+			if len(args) == 0 {
+				fmt.Fprintln(os.Stderr, "POOL: need at least one backend")
+				continue
+			}
+			lb.SetPool(args)
+			fmt.Fprintln(out, "OK")
 		case "PICK":
-			{
-				pick := RR_pick(&lb)
-				fmt.Println(pick)
-
+			if len(args) != 2 {
+				fmt.Fprintln(os.Stderr, "PICK: need exactly two backends")
+				continue
+			}
+			pick, err := lb.Pick(args[0], args[1])
+			switch {
+			case errors.Is(err, errEmptyPool):
+				fmt.Fprintln(out, "EMPTY")
+			case err != nil:
+				fmt.Fprintln(os.Stderr, "PICK:", err)
+			default:
+				fmt.Fprintln(out, pick)
 			}
 		case "DONE":
-			{
-				RR_done(&lb, args)
-
+			if len(args) != 1 {
+				fmt.Fprintln(os.Stderr, "DONE: need exactly one backend")
+				continue
 			}
-		case "POOL":
-			{
-				RR_pool(&lb, args)
+			if err := lb.Done(args[0]); err != nil {
+				fmt.Fprintln(os.Stderr, "DONE:", err)
+				continue
 			}
+			fmt.Fprintln(out, "OK")
 		case "STATUS":
-			{
-				RR_status(&lb)
+			for _, line := range lb.Status() {
+				fmt.Fprintln(out, line)
 			}
+		default:
+			fmt.Fprintln(os.Stderr, "unknown command:", cmd)
 		}
 	}
 }
